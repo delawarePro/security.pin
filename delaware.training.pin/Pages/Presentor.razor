@@ -1,0 +1,63 @@
+﻿@page "/presentor"
+@inject Data.GuessService GuessService
+
+<PageTitle>PIN Guesser</PageTitle>
+
+<div class="row py-3">
+    <div class="col-sm-6 py-1">
+        <h2>Join the guess</h2>
+        <img src="QR.gif" width="350" />
+    </div>
+    <div class="col-sm-6 py-1">
+        <h2>Statistics</h2>
+
+        @if (GuessService.IsGuessed)
+        {
+            <div class="card bg-white text-dark">
+                <div class="card-body">
+                    <h3 class="card-title">@GuessService.GuessedPIN</h3>
+                    <p class="card-text mb-3 text-success">PIN was guessed</p>
+                    <button type="button" class="btn btn-secondary btn-lg" @onclick="Reset">Reset</button>
+                </div>
+            </div>
+        }
+
+        <div class="card bg-white text-dark">
+            <div class="card-body">
+                <h3 class="card-title">@GuessService.Guesses.Count</h3>
+                <p class="card-text text-muted mb-3">Unique guesses</p>
+            </div>
+        </div>
+
+        @if (_mostGuessed.HasValue)
+        {
+            <div class="card bg-white text-dark">
+                <div class="card-body">
+                    <h3 class="card-title">@_mostGuessed.Value.Key</h3>
+                    <p class="card-text text-muted mb-3">Tried @_mostGuessed.Value.Value times</p>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code
+{
+    private Timer? _timer;
+    private KeyValuePair<int, int>? _mostGuessed;
+
+    protected override void OnInitialized()
+    {
+        _timer = new System.Threading.Timer(async _ =>  // async void
+        {
+            _mostGuessed = GuessService.Guesses.Any() ? GuessService.Guesses.MaxBy(g => g.Value) : null;
+
+            await InvokeAsync(StateHasChanged);
+        }, null, 0, 1000);
+    }
+
+    private void Reset()
+    {
+        GuessService.SetRandomPin();
+    }
+}

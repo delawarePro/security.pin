@@ -12,6 +12,7 @@ namespace delaware.training.pin.Data
 
         public bool IsGuessed { get; private set; }
 
+        public string GuessedPIN => IsGuessed ? _pincode.ToString("0000") : string.Empty;
 
         public GuessService()
 		{
@@ -23,6 +24,7 @@ namespace delaware.training.pin.Data
 			var random = new Random();
 			_pincode = random.Next(0, 9999);
 			IsGuessed = false;
+			Guesses = new();
         }
 
         public bool GuessPin(int guess)
