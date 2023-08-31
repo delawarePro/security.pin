@@ -1,0 +1,78 @@
+﻿@page "/"
+@inject Data.GuessService GuessService
+
+<PageTitle>Guess the PIN</PageTitle>
+
+<div class="row py-3">
+    <h2>Guess the PIN</h2>
+
+    <EditForm Model="@Model" OnSubmit="@Submit">
+        <ValidationSummary />
+
+        <div class="col-auto">
+            <label for="inputPassword6" class="col-form-label">Type in your guess of the current 4 digit PIN.</label>
+        </div>
+        <div class="col-auto">
+            <InputNumber @bind-Value="Model.Value" class="form-control" />
+        </div>
+        <div class="col-auto py-3">
+            <button type="submit" class="btn btn-primary btn-lg">Guess</button>
+        </div>
+
+        @if (IsGuessed.HasValue)
+            {
+                if (IsGuessed.Value)
+                {
+                <div class="alert alert-success">
+                    Alright, you cracked the PIN (@Model.Value).
+                </div>
+                }
+                else
+                {
+                <div class="alert alert-danger">
+                    Too bad, @Model.Value is not the correct PIN.
+                </div>
+                }
+            }
+
+    </EditForm>
+</div>
+
+<div class="row py-3">
+    <h2>Failed guesses</h2>
+    @foreach (var failed in GuessService.Guesses.OrderBy(kvp => kvp.Key))
+    {
+        <div class="col-sm-3 py-1">
+            <div class="card bg-white text-dark">
+                <div class="card-body">
+                    <h3 class="card-title">@failed.Key.ToString("0000")</h3>
+                    <p class="card-text text-muted mb-3">@failed.Value attempts</p>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    public Data.Guess Model { get; set; }
+    private EditContext? editContext;
+    public bool? IsGuessed { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Model ??= new();
+        IsGuessed = null;
+        editContext = new(Model);
+    }
+
+    private void Submit()
+    {
+        if (editContext == null || !editContext.Validate() || Model.Value == null)
+        {
+            IsGuessed = null;
+            return;
+        }
+
+        IsGuessed = GuessService.GuessPin(Model.Value.Value);
+    }
+}
